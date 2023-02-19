@@ -8,46 +8,55 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.ImageCapture
-import androidx.camera.video.Recorder
-import androidx.camera.video.Recording
-import androidx.camera.video.VideoCapture
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.example.cameraxapp.databinding.ActivityMainBinding
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import android.widget.Toast
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.core.Preview
-import androidx.camera.core.CameraSelector
 import android.util.Log
+import android.widget.SeekBar
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.CameraControl
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
-import androidx.camera.video.FallbackStrategy
-import androidx.camera.video.MediaStoreOutputOptions
-import androidx.camera.video.Quality
-import androidx.camera.video.QualitySelector
-import androidx.camera.video.VideoRecordEvent
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.*
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import androidx.lifecycle.LifecycleOwner
+import com.example.cameraxapp.databinding.ActivityMainBinding
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
-import java.util.Locale
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+
 
 typealias LumaListener = (luma: Double) -> Unit
 
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var viewBinding: ActivityMainBinding
+    private lateinit var cameraProvider: ProcessCameraProvider
+    private lateinit var cameraPreview: Preview
+    private lateinit var imageAnalyzer: ImageAnalysis
+    private lateinit var cameraSelector: CameraSelector
+    private lateinit var cameraExecutor: ExecutorService
 
+    private var camera: Camera? = null
     private var imageCapture: ImageCapture? = null
-
     private var videoCapture: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
 
-    private lateinit var cameraExecutor: ExecutorService
+    private var zoomRatio: Float = 1.0f
+        set(value) {
+            field = value
+            //updateCameraZoom()
+        }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,12 +71,32 @@ class MainActivity : AppCompatActivity() {
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
+        val zoomSeekBar = findViewById<SeekBar>(R.id.zoomSeekBar)
+        setupZoom(zoomSeekBar)
+
         // Set up the listeners for take photo and video capture buttons
         viewBinding.imageCaptureButton.setOnClickListener { takePhoto() }
         viewBinding.videoCaptureButton.setOnClickListener { captureVideo() }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
+    }
 
+    private fun setupZoom(zoomSeekBar: SeekBar) {
+        zoomSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                //zoomRatio = progress/10.toFloat()
+                //camera?.cameraControl?.setLinearZoom(progress/10.toFloat())
+                updateCameraZoom(progress/10.toFloat())
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+    }
+
+    private fun updateCameraZoom(x: Float) {
+        camera?.cameraControl?.setLinearZoom(x)
     }
 
     private fun takePhoto() {
@@ -111,7 +140,6 @@ class MainActivity : AppCompatActivity() {
             }
         )
     }
-
     private fun captureVideo() {
         val videoCapture = this.videoCapture ?: return
 
@@ -194,6 +222,7 @@ class MainActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
+
             val recorder = Recorder.Builder()
                 .setQualitySelector(QualitySelector.from(Quality.HIGHEST,
                     FallbackStrategy.higherQualityOrLowerThan(Quality.SD)))
@@ -221,12 +250,15 @@ class MainActivity : AppCompatActivity() {
 
                 // Bind use cases to camera
                 // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
+                camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageCapture, videoCapture)
+                //camera?.cameraControl?.setLinearZoom(1.0f)
 
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
+            cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, preview)
+            //camera?.cameraControl?.setLinearZoom(0f)
 
         }, ContextCompat.getMainExecutor(this))
 
@@ -245,6 +277,7 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String>, grantResults:
         IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
                 startCamera()
@@ -256,6 +289,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
 
     companion object {
         private const val TAG = "CameraXApp"
