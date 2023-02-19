@@ -67,6 +67,7 @@ class MainActivity : AppCompatActivity() {
         viewBinding.videoCaptureButton.setOnClickListener { captureVideo() }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
+
     }
 
     private fun takePhoto() {
@@ -293,3 +294,4 @@ private class LuminosityAnalyzer(private val listener: LumaListener) : ImageAnal
         image.close()
     }
 }
+
