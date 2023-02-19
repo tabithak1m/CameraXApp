@@ -12,7 +12,6 @@ private const val TAG = "MY_APP_DEBUG_TAG"
 const val MESSAGE_READ: Int = 0
 // ... (Add other message types here as needed.)
 
-
 class MyBluetoothService(
     // handler that gets info from Bluetooth service
     private val handler: Handler
