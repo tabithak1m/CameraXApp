@@ -1,4 +1,4 @@
-# MakeUofT-Selfie-Paradox-
+#IEEE MakeUofT Hackathon "Selfie Paradox"
 
 ## Inspiration
 Given the prompt "useless invention", we made our best attempt to develop the most useless device; something that defeats the whole purpose. With the hardware materials given, we were able to come to our current design: the "Selfie Paradox". 
