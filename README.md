@@ -1,7 +1,7 @@
 # IEEE MakeUofT Hackathon "Selfie Paradox"
 
 ## Inspiration
-Given the prompt "useless invention", we made our best attempt to develop the most useless device; something that defeats the whole purpose. With the hardware materials given, we were able to come to our current design: the "Selfie Paradox". 
+Given the prompt "useless invention" for the Mackathon MakeUofT 2023, we made our best attempt to develop the most useless device; something that defeats the whole purpose. With the hardware materials given, we were able to come to our current design: the "Selfie Paradox".
 
 ## What it does
 As explicit from the name, we built a selfie stick that zooms in the further you stretch the stick. As the purpose of a selfie stick is to include a wider range to capture, zooming in and essentially keeping the frame the same is the useless feature we worked on. 
